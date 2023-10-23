@@ -1,0 +1,22 @@
+metadata:
+  name: CiBi
+  description: Continuous Integration and Build Instrument
+  domain: yggdrasil.id
+  repoURL: https://github.com/eFishery/CiBi
+  environment: production
+
+readIntegration:
+  enable: True
+  fileName: .env
+  filePath: ./
+
+notionConfig:
+  apiKey: $CIBI_NOTION_API_KEY
+  databaseID: $CIBI_NOTION_DB_ID
+
+cibiConfig:
+  domainKeyword:
+    - "https://"
+    - "http://"
+    - "postgresql://"
+    - "internal.domain"
