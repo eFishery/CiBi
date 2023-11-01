@@ -5,7 +5,7 @@ git_hash := $(shell git describe --tags)
 current_time = $(shell date +"%Y-%m-%d:T%H:%M:%S")
 
 # Add linker flags
-linker_flags = '-s -X main.buildTime=${current_time} -X main.version=${git_hash}'
+linker_flags = '-s -w -X main.buildTime=${current_time} -X main.version=${git_hash}'
 
 # Build binaries for current OS and Linux
 .PHONY:

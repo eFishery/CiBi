@@ -17,8 +17,9 @@ import (
 )
 
 type NotionConfig struct {
-	ApiKey 	   		notionapi.Token	`yaml:"apiKey"`
-	DatabaseID 		string 			`yaml:"databaseID"`
+	ApiKey 	   			notionapi.Token	`yaml:"apiKey"`
+	DatabaseID 			string 			`yaml:"databaseID"`
+	DeploymentLog 		string 			`yaml:"deploymentLog"`
 }
 
 type NotionRecord struct {
@@ -31,9 +32,21 @@ type NotionRecord struct {
 	Environment		string			`select,Environment`
 }
 
+type DeploymentLog struct{
+	Name			string			`title,Name`
+	Domain			string			`rich_text,Domain`
+	DeployedAt		notionapi.Date	`date,Deployed at`
+	DeployedBy		string			`rich_text,Deployed by`
+	Environment		string			`select,Environment`
+	PipelineLink	string			`rich_text,Pipeline Link`
+	Version			string			`rich_text,Version`
+	RepoURL			string			`rich_text,Repo URL`
+}
+
 func (nt *NotionConfig) Load(cfg utils.CiBiConfig) *NotionConfig{
 	nt.ApiKey = notionapi.Token(cfg.NotionConfig.ApiKey)
 	nt.DatabaseID = cfg.NotionConfig.DatabaseID
+	nt.DeploymentLog = cfg.NotionConfig.DeploymentLog
 
 	return nt
 }
@@ -298,6 +311,92 @@ func (nt *NotionConfig) NewRecord(dataRecord *NotionRecord) (*notionapi.Page, er
 			dataSet.Properties[fieldName] = notionapi.SelectProperty{
 				Select: notionapi.Option{
 					Name: fmt.Sprintf("%v", fieldValue),
+				},
+			}
+		case "date":
+			var dataField *notionapi.Date
+			dataField = fieldValue.(*notionapi.Date)
+			dataSet.Properties[fieldName] = notionapi.DateProperty{
+				Date: &notionapi.DateObject{
+					Start: dataField,
+				},
+			}
+		// can't continue this, and must inputted manually
+		// because notion API won't get the "Guest" user
+		// case "people":
+		// 	var people []notionapi.User
+		// 	for _, email := range dataRecord.InCharge {
+		// 		people = append(people, notionapi.User{Person: &notionapi.Person{Email: email}})
+		// 	}
+		// 	dataSet.Properties[fieldName] = notionapi.PeopleProperty{
+		// 		People: people,
+		// 	}
+		}
+	}
+
+	pageReturn, err := client.Page.Create(context.Background(), dataSet)
+
+	if err != nil {
+		return nil, fmt.Errorf("Create() error = %v", err)
+	}
+
+	return pageReturn, nil
+}
+
+func (nt *NotionConfig) NewLogRecord(dataRecord *DeploymentLog) (*notionapi.Page, error) {
+	client := notionapi.NewClient(nt.ApiKey)
+
+	dataSet := &notionapi.PageCreateRequest{
+		Parent: notionapi.Parent{
+			Type:       notionapi.ParentTypeDatabaseID,
+			DatabaseID: notionapi.DatabaseID(nt.DeploymentLog),
+		},
+		Properties: notionapi.Properties{},
+	}
+
+	structNC := reflect.ValueOf(dataRecord).Elem()
+	for i := 0; i < structNC.NumField(); i++ {
+		fieldNC := structNC.Type().Field(i).Name
+		fieldValue := structNC.Field(i).Interface()
+		fieldTag, _ := reflect.TypeOf(dataRecord).Elem().FieldByName(fieldNC)
+		fieldType := strings.Split(string(fieldTag.Tag), ",")[0]
+		fieldName := strings.Split(string(fieldTag.Tag), ",")[1]
+		switch fieldType {
+		case "title":
+			dataSet.Properties[fieldName] = notionapi.TitleProperty{
+				Title: []notionapi.RichText{
+					{Text: &notionapi.Text{
+						Content: fmt.Sprintf("%v", fieldValue),},
+					},
+				},
+			}
+		case "rich_text":
+			dataSet.Properties[fieldName] = notionapi.RichTextProperty{
+				RichText: []notionapi.RichText{
+					{Text: &notionapi.Text{
+						Content: fmt.Sprintf("%v", fieldValue),},
+					},
+				},
+			}
+		case "multi_select":
+			dataSet.Properties[fieldName] = notionapi.MultiSelectProperty{
+				MultiSelect: []notionapi.Option{
+					{Name: fmt.Sprintf("%v", fieldValue),},
+				},
+			}
+		case "select":
+			dataSet.Properties[fieldName] = notionapi.SelectProperty{
+				Select: notionapi.Option{
+					Name: fmt.Sprintf("%v", fieldValue),
+				},
+			}
+		case "date":
+			var dataField notionapi.Date
+			dataField = fieldValue.(notionapi.Date)
+
+			dataSet.Properties[fieldName] = notionapi.DateProperty{
+				Date: &notionapi.DateObject{
+					Start: &dataField,
 				},
 			}
 		// can't continue this, and must inputted manually

@@ -33,6 +33,11 @@ func (h *CiBiConfig) Load(filename string) (*CiBiConfig, error) {
 		h.NotionConfig.DatabaseID = getEnvString(originalVarName, "EMPTY NOTION DATABASE ID")
 	}
 
+	if strings.HasPrefix(h.NotionConfig.DeploymentLog, "$"){
+		originalVarName := strings.TrimPrefix(h.NotionConfig.DeploymentLog, "$")
+		h.NotionConfig.DeploymentLog = getEnvString(originalVarName, "EMPTY NOTION DATABASE ID")
+	}
+
 	h.FileName = filename
 
 	return h, nil

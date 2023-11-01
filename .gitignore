@@ -1,3 +1,4 @@
 .env
 *cibi.yaml
 localdev.sh
+bin/

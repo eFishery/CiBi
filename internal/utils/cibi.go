@@ -18,6 +18,7 @@ type ReadIntegration struct {
 type NotionConfig struct {
 	ApiKey 	   		string			`yaml:"apiKey"`
 	DatabaseID 		string 			`yaml:"databaseID"`
+	DeploymentLog	string			`yaml:"deploymentLog"`
 }
 
 type CiBiConfig struct{

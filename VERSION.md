@@ -32,7 +32,7 @@
         - key `apiKey` to define the API Key, use the {{VARIABLE_NAME}} to get this variable from environment file
         - key `databaseID` to define the database ID in notion, use the {{VARIABLE_NAME}} to get this variable from
 - add table on every page software with information field
-    - name app (APP Deploy Log)
+    - Name (APP Deploy Log)
     - deployed_at
     - deployed by
     - domain app
